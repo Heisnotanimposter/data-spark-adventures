@@ -6,6 +6,7 @@ import { toast } from "@/components/ui/sonner";
 import { BookOpen, ChartBar } from "lucide-react";
 import NotebookProcessing from './NotebookProcessing';
 import NotebookError from './NotebookError';
+import NotebookSuccess from './NotebookSuccess';
 
 interface WelcomeMessageProps {
   userName: string;
@@ -14,8 +15,10 @@ interface WelcomeMessageProps {
 const WelcomeMessage = ({ userName = "Explorer" }: WelcomeMessageProps) => {
   const [processingNotebook, setProcessingNotebook] = useState(false);
   const [notebookError, setNotebookError] = useState<boolean>(false);
+  const [notebookSuccess, setNotebookSuccess] = useState<boolean>(false);
   const [errorType, setErrorType] = useState<'permissions' | 'connection' | 'data' | 'unknown'>('unknown');
   const [progress, setProgress] = useState(0);
+  const [visualizationType, setVisualizationType] = useState<string>("bar chart");
   
   // Get current time to personalize greeting
   const currentHour = new Date().getHours();
@@ -38,8 +41,13 @@ const WelcomeMessage = ({ userName = "Explorer" }: WelcomeMessageProps) => {
     
   const runSampleNotebook = () => {
     setNotebookError(false);
+    setNotebookSuccess(false);
     setProcessingNotebook(true);
     setProgress(0);
+    
+    // Randomly select visualization type for demo
+    const vizTypes = ["bar chart", "scatter plot", "line graph", "pie chart", "heat map"];
+    setVisualizationType(vizTypes[Math.floor(Math.random() * vizTypes.length)]);
     
     toast("Starting Educational Visualization Demo", {
       description: "Preparing an interactive learning experience...",
@@ -74,8 +82,9 @@ const WelcomeMessage = ({ userName = "Explorer" }: WelcomeMessageProps) => {
           clearInterval(interval);
           setTimeout(() => {
             setProcessingNotebook(false);
-            toast("Learning journey started!", {
-              description: "Explore your visualization and the principles behind it.",
+            setNotebookSuccess(true);
+            toast("Visualization complete!", {
+              description: "Your data story is ready to explore.",
             });
           }, 500);
           return 100;
@@ -96,6 +105,38 @@ const WelcomeMessage = ({ userName = "Explorer" }: WelcomeMessageProps) => {
     });
   };
 
+  const handleDownload = () => {
+    toast("Downloading visualization", {
+      description: "Your visualization is being prepared for download.",
+    });
+    // Simulating a download delay
+    setTimeout(() => {
+      toast("Download complete", {
+        description: "Your visualization has been saved to your downloads folder.",
+      });
+    }, 1500);
+  };
+
+  const handleExplore = () => {
+    toast("Exploring datasets", {
+      description: "Browse our collection of sample datasets to analyze.",
+    });
+  };
+
+  const handleModify = () => {
+    toast("Modify parameters", {
+      description: "Adjust visualization settings to highlight different aspects of your data.",
+    });
+    // Return to notebook processing to "modify" parameters
+    setNotebookSuccess(false);
+    runSampleNotebook();
+  };
+
+  const handleStartOver = () => {
+    setNotebookSuccess(false);
+    setNotebookError(false);
+  };
+
   if (processingNotebook) {
     return <NotebookProcessing progress={progress} />;
   }
@@ -105,6 +146,15 @@ const WelcomeMessage = ({ userName = "Explorer" }: WelcomeMessageProps) => {
       errorType={errorType} 
       onRetry={handleRetry} 
       onContact={handleContactSupport} 
+    />;
+  }
+
+  if (notebookSuccess) {
+    return <NotebookSuccess 
+      visualizationType={visualizationType}
+      onDownload={handleDownload}
+      onExplore={handleExplore}
+      onModify={handleModify}
     />;
   }
 
