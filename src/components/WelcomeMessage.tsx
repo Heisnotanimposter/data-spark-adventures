@@ -2,12 +2,17 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { toast } from "@/components/ui/sonner";
+import NotebookProcessing from './NotebookProcessing';
 
 interface WelcomeMessageProps {
   userName: string;
 }
 
 const WelcomeMessage = ({ userName = "Explorer" }: WelcomeMessageProps) => {
+  const [processingNotebook, setProcessingNotebook] = useState(false);
+  const [progress, setProgress] = useState(0);
+  
   // Get current time to personalize greeting
   const currentHour = new Date().getHours();
   let greeting = "Hello";
@@ -26,6 +31,37 @@ const WelcomeMessage = ({ userName = "Explorer" }: WelcomeMessageProps) => {
     .map(name => name[0])
     .join('')
     .toUpperCase();
+    
+  const runSampleNotebook = () => {
+    setProcessingNotebook(true);
+    setProgress(0);
+    
+    toast("Starting Colab notebook", {
+      description: "Preparing your data for visualization...",
+    });
+    
+    // Simulate progress updates
+    const interval = setInterval(() => {
+      setProgress(prev => {
+        const newProgress = prev + Math.random() * 10;
+        if (newProgress >= 100) {
+          clearInterval(interval);
+          setTimeout(() => {
+            setProcessingNotebook(false);
+            toast("Visualization complete!", {
+              description: "Your data story is ready to explore.",
+            });
+          }, 500);
+          return 100;
+        }
+        return newProgress;
+      });
+    }, 800);
+  };
+
+  if (processingNotebook) {
+    return <NotebookProcessing progress={progress} />;
+  }
 
   return (
     <div className="bg-gradient-to-r from-secondary to-secondary/30 rounded-2xl p-8 mb-8">
@@ -54,7 +90,7 @@ const WelcomeMessage = ({ userName = "Explorer" }: WelcomeMessageProps) => {
               Start with a pre-built template and watch your data come to life with just a few clicks!
             </p>
             <div className="flex flex-wrap gap-3">
-              <Button variant="default" size="sm">
+              <Button variant="default" size="sm" onClick={runSampleNotebook}>
                 Try a Sample Notebook
               </Button>
               <Button variant="outline" size="sm">
