@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { toast } from "@/components/ui/sonner";
+import { BookOpen, ChartBar } from "lucide-react";
 import NotebookProcessing from './NotebookProcessing';
 
 interface WelcomeMessageProps {
@@ -36,8 +37,8 @@ const WelcomeMessage = ({ userName = "Explorer" }: WelcomeMessageProps) => {
     setProcessingNotebook(true);
     setProgress(0);
     
-    toast("Starting Colab notebook", {
-      description: "Preparing your data for visualization...",
+    toast("Starting Educational Visualization Demo", {
+      description: "Preparing an interactive learning experience...",
     });
     
     // Simulate progress updates
@@ -48,8 +49,8 @@ const WelcomeMessage = ({ userName = "Explorer" }: WelcomeMessageProps) => {
           clearInterval(interval);
           setTimeout(() => {
             setProcessingNotebook(false);
-            toast("Visualization complete!", {
-              description: "Your data story is ready to explore.",
+            toast("Learning journey started!", {
+              description: "Explore your visualization and the principles behind it.",
             });
           }, 500);
           return 100;
@@ -78,25 +79,35 @@ const WelcomeMessage = ({ userName = "Explorer" }: WelcomeMessageProps) => {
           </h1>
           
           <p className="text-lg text-muted-foreground mb-6">
-            Welcome to your data exploration journey. Ready to uncover insights that will transform your understanding?
+            Welcome to your data visualization learning journey. We're excited to help you build your data literacy skills one insight at a time.
           </p>
           
           <div className="p-4 bg-white/80 backdrop-blur-sm rounded-lg border shadow-sm">
-            <h3 className="text-lg font-medium mb-2">
-              🚀 Ready to explore your data?
+            <h3 className="text-lg font-medium mb-2 flex items-center gap-2">
+              <BookOpen className="h-5 w-5 text-primary" />
+              Start Your Data Literacy Journey
             </h3>
             <p className="text-muted-foreground mb-4">
-              Our sample notebooks make it easy to visualize and understand your data without any coding expertise. 
-              Start with a pre-built template and watch your data come to life with just a few clicks!
+              New to data visualization? Our educational notebooks explain <em>why</em> certain charts work best for specific data types, 
+              not just how to create them. Run our beginner-friendly demo to see a visualization come to life, complete with simple 
+              explanations of the principles behind effective data storytelling.
             </p>
             <div className="flex flex-wrap gap-3">
-              <Button variant="default" size="sm" onClick={runSampleNotebook}>
-                Try a Sample Notebook
+              <Button variant="default" size="sm" onClick={runSampleNotebook} className="flex items-center gap-2">
+                <ChartBar className="h-4 w-4" />
+                Run Learning Demo
               </Button>
               <Button variant="outline" size="sm">
-                Take a Tour
+                Browse Tutorials
               </Button>
             </div>
+          </div>
+          
+          <div className="mt-4 bg-primary/10 p-3 rounded-lg text-sm">
+            <p className="flex items-start">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 text-primary shrink-0 mt-0.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <span>Each visualization includes explanations of <strong>why</strong> it's effective for your data type</span>
+            </p>
           </div>
         </div>
       </div>
