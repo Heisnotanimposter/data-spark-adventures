@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { toast } from "@/components/ui/sonner";
 import { BookOpen, ChartBar } from "lucide-react";
 import NotebookProcessing from './NotebookProcessing';
+import NotebookError from './NotebookError';
 
 interface WelcomeMessageProps {
   userName: string;
@@ -12,6 +13,8 @@ interface WelcomeMessageProps {
 
 const WelcomeMessage = ({ userName = "Explorer" }: WelcomeMessageProps) => {
   const [processingNotebook, setProcessingNotebook] = useState(false);
+  const [notebookError, setNotebookError] = useState<boolean>(false);
+  const [errorType, setErrorType] = useState<'permissions' | 'connection' | 'data' | 'unknown'>('unknown');
   const [progress, setProgress] = useState(0);
   
   // Get current time to personalize greeting
@@ -34,6 +37,7 @@ const WelcomeMessage = ({ userName = "Explorer" }: WelcomeMessageProps) => {
     .toUpperCase();
     
   const runSampleNotebook = () => {
+    setNotebookError(false);
     setProcessingNotebook(true);
     setProgress(0);
     
@@ -41,10 +45,31 @@ const WelcomeMessage = ({ userName = "Explorer" }: WelcomeMessageProps) => {
       description: "Preparing an interactive learning experience...",
     });
     
-    // Simulate progress updates
+    // Simulate progress updates with a chance of random error
     const interval = setInterval(() => {
       setProgress(prev => {
+        // Randomly simulate an error (20% chance) when progress is between 30-80%
         const newProgress = prev + Math.random() * 10;
+        
+        if (newProgress > 30 && newProgress < 80 && Math.random() < 0.2) {
+          clearInterval(interval);
+          
+          // Randomly pick an error type
+          const errorTypes = ['permissions', 'connection', 'data', 'unknown'] as const;
+          const randomError = errorTypes[Math.floor(Math.random() * errorTypes.length)];
+          
+          setTimeout(() => {
+            setNotebookError(true);
+            setProcessingNotebook(false);
+            setErrorType(randomError);
+            toast("We encountered a problem", {
+              description: "Something went wrong with your notebook execution.",
+            });
+          }, 500);
+          
+          return prev;
+        }
+        
         if (newProgress >= 100) {
           clearInterval(interval);
           setTimeout(() => {
@@ -60,8 +85,27 @@ const WelcomeMessage = ({ userName = "Explorer" }: WelcomeMessageProps) => {
     }, 800);
   };
 
+  const handleRetry = () => {
+    setNotebookError(false);
+    runSampleNotebook();
+  };
+
+  const handleContactSupport = () => {
+    toast("Support request sent", {
+      description: "Our team will get back to you shortly to help resolve this issue.",
+    });
+  };
+
   if (processingNotebook) {
     return <NotebookProcessing progress={progress} />;
+  }
+
+  if (notebookError) {
+    return <NotebookError 
+      errorType={errorType} 
+      onRetry={handleRetry} 
+      onContact={handleContactSupport} 
+    />;
   }
 
   return (
