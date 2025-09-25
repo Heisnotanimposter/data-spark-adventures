@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Header from '@/components/Header';
 import WelcomeMessage from '@/components/WelcomeMessage';
@@ -7,9 +6,15 @@ import SampleNotebooks from '@/components/SampleNotebooks';
 import Footer from '@/components/Footer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import vizPlaceholder from '@/assets/visualization-placeholder.svg';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { GoogleLogin } from '@react-oauth/google';
+import { Button } from '@/components/ui/button';
 
 const Index = () => {
   const [userName, setUserName] = useState('Data Explorer');
+  const navigate = useNavigate();
+  const { isAuthenticated, login } = useAuth();
   
   const recentVisualizations = [
     {
@@ -34,6 +39,11 @@ const Index = () => {
       buttonText: "View Details"
     }
   ];
+
+  const handleLoginSuccess = (credentialResponse: any) => {
+    login();
+    navigate('/collab');
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -134,6 +144,29 @@ const Index = () => {
               </button>
             </div>
           </div>
+        </div>
+
+        <div className="mt-8 space-y-6">
+          {!isAuthenticated ? (
+            <div className="flex flex-col items-center">
+              <GoogleLogin
+                onSuccess={handleLoginSuccess}
+                onError={() => {
+                  console.log('Login Failed');
+                }}
+              />
+            </div>
+          ) : (
+            <div className="flex flex-col items-center space-y-4">
+              <p className="text-green-600">You are logged in!</p>
+              <Button
+                onClick={() => navigate('/collab')}
+                className="w-full"
+              >
+                Go to Collaboration
+              </Button>
+            </div>
+          )}
         </div>
       </main>
       
