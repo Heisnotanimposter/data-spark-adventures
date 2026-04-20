@@ -1,0 +1,54 @@
+{
+  "repos": [
+    {
+      "repoId": 1,
+      "repoFullName": "private/top-secret-engine",
+      "supply": 4,
+      "basePrice": 100,
+      "k": 10
+    },
+    {
+      "repoId": 2,
+      "repoFullName": "private/premium-asset",
+      "supply": 5,
+      "basePrice": 250,
+      "k": 5
+    },
+    {
+      "repoId": 3,
+      "repoFullName": "vercel/ms",
+      "supply": 0,
+      "basePrice": 50,
+      "k": 2
+    }
+  ],
+  "users": {
+    "user123": {
+      "address": "0x71C7656EC7ab88b098defB751B7401B5f6d8976F",
+      "tokens": {
+        "1": 3,
+        "2": 1
+      },
+      "machineId": "mac-uuid-1234-5678"
+    },
+    "user456": {
+      "address": "0xC2...f3e",
+      "tokens": {
+        "1": 1,
+        "2": 2
+      },
+      "staked": 0,
+      "machineId": null
+    },
+    "user789": {
+      "address": "0xBe...91a",
+      "tokens": {},
+      "staked": 0,
+      "machineId": null
+    }
+  },
+  "treasury": {
+    "protocolBalance": 9,
+    "dividendsAccumulated": 0
+  }
+}
