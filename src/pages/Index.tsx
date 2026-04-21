@@ -1,175 +1,166 @@
 import React, { useState } from 'react';
+import TickerTape from '@/components/TickerTape';
+import StarPriceChart from '@/components/StarPriceChart';
+import TradePanel from '@/components/TradePanel';
 import Header from '@/components/Header';
-import WelcomeMessage from '@/components/WelcomeMessage';
-import DataCard from '@/components/DataCard';
-import SampleNotebooks from '@/components/SampleNotebooks';
 import Footer from '@/components/Footer';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import vizPlaceholder from '@/assets/visualization-placeholder.svg';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { GoogleLogin } from '@react-oauth/google';
-import { Button } from '@/components/ui/button';
+import { useMarket } from '@/contexts/MarketContext';
+import { useWallet } from '@/contexts/WalletContext';
+import { Card } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
+import { Zap, TrendingUp, Users, Activity } from 'lucide-react';
 
 const Index = () => {
-  const [userName, setUserName] = useState('Data Explorer');
-  const navigate = useNavigate();
-  const { isAuthenticated, login } = useAuth();
-  
-  const recentVisualizations = [
-    {
-      title: "Sales Performance",
-      description: "Monthly revenue trends with breakdown by product category",
-      imageSrc: vizPlaceholder,
-      altText: "Bar chart showing sales data",
-      buttonText: "View Details"
-    },
-    {
-      title: "Customer Demographics",
-      description: "Analysis of customer segments by age, location and purchasing habits",
-      imageSrc: vizPlaceholder,
-      altText: "Pie chart showing demographic data",
-      buttonText: "View Details"
-    },
-    {
-      title: "Engagement Metrics",
-      description: "User interaction patterns across website and mobile applications",
-      imageSrc: vizPlaceholder,
-      altText: "Line chart showing engagement metrics",
-      buttonText: "View Details"
-    }
+  const { repos, isLoading } = useMarket();
+  const { totalValue } = useWallet();
+  const [selectedRepoIndex, setSelectedRepoIndex] = useState(0);
+  const [lockout, setLockout] = useState<string | null>(null);
+
+  const selectedRepo = repos[selectedRepoIndex];
+
+  // Bonding Curve Price Calculation for UI
+  const getPrice = (repo: any) => repo.basePrice + repo.k * Math.pow(repo.supply, 2);
+
+  const currentPrices = repos.reduce((acc, repo) => {
+    acc[repo.repoId] = getPrice(repo);
+    return acc;
+  }, {} as Record<number, number>);
+
+  const navItems = [
+    { label: 'Demand Index', value: 'High', icon: Activity },
+    { label: 'Market Supply', value: `${repos.reduce((s, r) => s + r.supply, 0)} Seats`, icon: TrendingUp },
+    { label: 'Active Makers', value: '1', icon: Users },
   ];
 
-  const handleLoginSuccess = (credentialResponse: any) => {
-    login();
-    navigate('/collab');
-  };
+  const [events, setEvents] = useState([
+    { id: 1, type: 'Mint Approved', user: '0x71...f2e', time: 'Just now' },
+    { id: 2, type: 'Access Granted', user: '0x3a...1b4', time: '2m ago' },
+  ]);
 
-  return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-      
-      <main className="flex-1 max-w-7xl w-full mx-auto px-6 py-8">
-        <WelcomeMessage userName={userName} />
-        
-        <div className="mb-10">
-          <Tabs defaultValue="recent" className="w-full">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold">Your Visualizations</h2>
-              <TabsList>
-                <TabsTrigger value="recent">Recent</TabsTrigger>
-                <TabsTrigger value="popular">Popular</TabsTrigger>
-                <TabsTrigger value="favorites">Favorites</TabsTrigger>
-              </TabsList>
-            </div>
-            
-            <TabsContent value="recent" className="mt-0">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {recentVisualizations.map((viz, index) => (
-                  <DataCard
-                    key={index}
-                    title={viz.title}
-                    description={viz.description}
-                    imageSrc={viz.imageSrc}
-                    altText={viz.altText}
-                    buttonText={viz.buttonText}
-                  />
-                ))}
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="popular" className="mt-0">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Same visualization cards can be used here for demo purposes */}
-                {recentVisualizations.map((viz, index) => (
-                  <DataCard
-                    key={index}
-                    title={`Popular: ${viz.title}`}
-                    description={viz.description}
-                    imageSrc={viz.imageSrc}
-                    altText={viz.altText}
-                    buttonText={viz.buttonText}
-                  />
-                ))}
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="favorites" className="mt-0">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Same visualization cards can be used here for demo purposes */}
-                {recentVisualizations.slice(0, 2).map((viz, index) => (
-                  <DataCard
-                    key={index}
-                    title={`Favorite: ${viz.title}`}
-                    description={viz.description}
-                    imageSrc={viz.imageSrc}
-                    altText={viz.altText}
-                    buttonText={viz.buttonText}
-                  />
-                ))}
-              </div>
-            </TabsContent>
-          </Tabs>
+  React.useEffect(() => {
+    const handleLockout = (e: any) => setLockout(e.detail);
+    window.addEventListener('sentinel_lockout', handleLockout);
+    return () => window.removeEventListener('sentinel_lockout', handleLockout);
+  }, []);
+
+  if (lockout) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center p-8 text-center">
+        <div className="max-w-md space-y-6">
+          <div className="text-red-600 font-mono text-5xl mb-4">ACCESS DENIED</div>
+          <p className="text-muted-foreground font-mono uppercase tracking-widest">{lockout}</p>
+          <div className="p-4 bg-red-900/20 border border-red-900/50 rounded text-red-400 text-xs text-left font-mono">
+            [SENTINEL_ALERT] Machine ID Mismatch or Star Token Burned. Redistribution protocol blocked.
+          </div>
+          <button onClick={() => window.location.reload()} className="text-primary underline text-sm">Retry Verification</button>
         </div>
-        
-        <SampleNotebooks />
-        
-        <div className="bg-secondary/50 rounded-lg p-8 mb-10">
-          <div className="flex flex-col md:flex-row md:items-center justify-between">
-            <div className="md:max-w-2xl mb-6 md:mb-0">
-              <h2 className="text-2xl font-bold mb-2">Discover the Power of Data</h2>
-              <p className="text-muted-foreground mb-4">
-                Our sample Colab notebooks are designed to help you visualize and understand your data without any coding expertise. 
-                Run a notebook and watch your data transform into beautiful, insightful visualizations that tell compelling stories.
-              </p>
-              <ul className="space-y-2">
-                <li className="flex items-start">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 text-primary"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                  <span>No coding knowledge required</span>
-                </li>
-                <li className="flex items-start">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 text-primary"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                  <span>Interactive visualizations</span>
-                </li>
-                <li className="flex items-start">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 text-primary"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                  <span>Easy sharing and collaboration</span>
-                </li>
-              </ul>
-            </div>
-            
-            <div>
-              <button className="bg-accent hover:bg-accent/90 text-white px-6 py-3 rounded-lg font-medium transition-colors">
-                Get Started Now
-              </button>
-            </div>
+      </div>
+    );
+  }
+
+  if (isLoading || !selectedRepo) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <Header />
+        <div className="flex-1 p-8 space-y-8 max-w-7xl mx-auto w-full">
+          <Skeleton className="h-[400px] w-full rounded-xl" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <Skeleton className="h-[300px] rounded-xl" />
           </div>
         </div>
+      </div>
+    );
+  }
 
-        <div className="mt-8 space-y-6">
-          {!isAuthenticated ? (
-            <div className="flex flex-col items-center">
-              <GoogleLogin
-                onSuccess={handleLoginSuccess}
-                onError={() => {
-                  console.log('Login Failed');
-                }}
-              />
+  return (
+    <div className="min-h-screen bg-background flex flex-col selection:bg-primary/20">
+      <Header />
+      <TickerTape />
+      
+      <main className="flex-1 max-w-7xl w-full mx-auto px-6 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
+          <Card className="p-6 bg-gradient-to-br from-primary/10 to-transparent border-primary/20 lg:col-span-1">
+            <div className="text-[10px] text-muted-foreground mb-1 uppercase tracking-widest font-black">Holdings Value</div>
+            <div className="text-3xl font-bold font-mono tracking-tighter">
+              ${totalValue(currentPrices).toLocaleString()}
             </div>
-          ) : (
-            <div className="flex flex-col items-center space-y-4">
-              <p className="text-green-600">You are logged in!</p>
-              <Button
-                onClick={() => navigate('/collab')}
-                className="w-full"
-              >
-                Go to Collaboration
-              </Button>
+          </Card>
+          
+          {navItems.map((item, i) => (
+            <Card key={i} className="p-6 bg-card/50 border-border/50 backdrop-blur-sm flex items-center space-x-4">
+              <div className="p-3 bg-secondary rounded-lg">
+                <item.icon className="text-primary" size={20} />
+              </div>
+              <div>
+                <div className="text-sm text-muted-foreground uppercase text-[10px] tracking-widest font-bold">{item.label}</div>
+                <div className="text-xl font-bold">{item.value}</div>
+              </div>
+            </Card>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+          <div className="lg:col-span-2 space-y-6">
+            <StarPriceChart repo={{
+              id: selectedRepo.repoId,
+              name: selectedRepo.repoFullName.split('/')[1],
+              full_name: selectedRepo.repoFullName,
+              owner: selectedRepo.repoFullName.split('/')[0],
+              stars: selectedRepo.supply,
+              price: getPrice(selectedRepo),
+              change24h: 5.2,
+              history: [] // Historical data would be fetched from backend in production
+            }} />
+            
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {repos.map((repo, i) => (
+                <button
+                  key={repo.repoId}
+                  onClick={() => setSelectedRepoIndex(i)}
+                  className={`p-4 rounded-xl border transition-all text-left group ${
+                    selectedRepoIndex === i 
+                    ? 'border-primary bg-primary/5 ring-1 ring-primary' 
+                    : 'border-border/50 bg-card/30 hover:bg-card/50'
+                  }`}
+                >
+                  <div className="flex justify-between items-start mb-2">
+                    <Badge variant="outline" className="text-[10px] uppercase font-bold">{repo.repoFullName.split('/')[0]}</Badge>
+                    <Zap size={14} className={selectedRepoIndex === i ? 'text-primary' : 'text-muted-foreground group-hover:text-primary transition-colors'} />
+                  </div>
+                  <div className="font-bold truncate text-sm uppercase">{repo.repoFullName.split('/')[1]}</div>
+                  <div className="text-xs text-muted-foreground pt-1">Supply: {repo.supply}</div>
+                </button>
+              ))}
             </div>
-          )}
+          </div>
+
+          <div className="space-y-6">
+            <TradePanel repo={selectedRepo} />
+            
+            <Card className="p-6 bg-secondary/20 border-border/40 overflow-hidden">
+              <h3 className="font-bold mb-4 flex items-center text-[10px] uppercase tracking-widest text-primary/80">
+                <Activity size={16} className="mr-2" />
+                Security Audit Logs
+              </h3>
+              <div className="space-y-4">
+                {events.map((event) => (
+                  <div key={event.id} className="flex items-start space-x-3 text-xs animate-in fade-in slide-in-from-right-2 duration-500">
+                    <div className="w-1 h-8 bg-primary/50 rounded-full" />
+                    <div className="flex-1">
+                      <div className="font-bold flex justify-between uppercase">
+                        {event.type}
+                        <span className="text-[9px] text-muted-foreground font-normal lowercase">{event.time}</span>
+                      </div>
+                      <div className="text-[10px] text-muted-foreground font-mono opacity-60">Verified {event.user}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          </div>
         </div>
       </main>
-      
       <Footer />
     </div>
   );
